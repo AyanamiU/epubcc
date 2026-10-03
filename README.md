@@ -3,7 +3,8 @@
 用 Python 写的 EPUB 电子书简体 ⇄ 繁体转换命令行工具，底层使用
 [OpenCC](https://github.com/BYVoid/OpenCC)。只转换正文文字，尽量不破坏电子书结构。
 
-支持 **Windows / Linux / macOS**，三种安装方式任选：独立可执行文件、pipx、pip。
+支持 **Windows / Linux / macOS**。本工具以**源码形式**提供（不发布到 PyPI、
+也不提供预编译二进制），需要本机有 Python ≥ 3.9。
 
 ## 特性
 
@@ -27,86 +28,121 @@
 
 ## 安装
 
-需要 Python ≥ 3.9。下面任选一种方式。
-
-### 方式一：下载独立可执行文件（无需 Python）
-
-到 [Releases](../../releases) 下载对应平台的文件，直接运行：
-
-| 平台 | 文件 |
-| --- | --- |
-| Windows 64 位 | `epubcc-windows-x64.exe` |
-| Linux x64 | `epubcc-linux-x64` |
-| macOS (Apple Silicon) | `epubcc-macos-arm64` |
+需要 Python ≥ 3.9。本工具**只以源码形式提供**（不发布到 PyPI，也不提供预编译
+二进制），请先把仓库克隆到本地：
 
 ```bash
-# macOS / Linux：加执行权限后放到 PATH
-chmod +x epubcc-linux-x64
-sudo mv epubcc-linux-x64 /usr/local/bin/epubcc
+git clone https://github.com/AyanamiU/epubcc.git epubcc && cd epubcc
+```
+
+### 一键安装脚本（推荐）
+
+克隆后，在仓库目录运行对应平台的脚本，即可自动把 `epubcc` 装成全局命令：
+
+```bash
+# macOS / Linux
+bash install.sh
+```
+
+```bat
+:: Windows（在 cmd 里执行，或直接双击）
+install.bat
+```
+
+脚本会：
+
+- 先检查 Python：**未安装或低于 3.9 就直接拒绝执行**；
+- 在用户目录建独立虚拟环境，`pip` 安装本仓库（含依赖 OpenCC），不污染系统 Python；
+- 把 `epubcc` 命令放进 PATH（macOS/Linux 用软链，Windows 生成 `epubcc.cmd`
+  并写入用户 PATH），并在当前终端做一次自检；
+- 重跑脚本即可升级 / 重装。
+
+可选环境变量（按需在运行前设置）：
+
+| 变量 | 作用 |
+| --- | --- |
+| `PYTHON=python3.12` | 指定要用的解释器 |
+| `EPUBCC_EXTRAS=detect,completion` | 同时安装可选依赖（chardet / argcomplete） |
+| `EPUBCC_VENV=/path` | 自定义隔离环境目录 |
+| `EPUBCC_BIN=/path` | 自定义命令安装目录 |
+| `EPUBCC_NO_PAUSE=1` | （仅 Windows）结束时不暂停 |
+
+> 脚本就在本仓库里，安装的也是当前这份源码，因此始终是“源码方式”。
+
+### 手动安装（以下任选一种）
+
+如果你不想用脚本，也可以手动执行。下面所有方式都基于克隆到本地的源码。
+
+#### 方式一：直接运行单文件（最简单）
+
+`epubcc.py` 是自包含的单文件脚本，只需要它一个文件即可运行：
+
+```bash
+# 只下载这一个文件（无需克隆整个仓库）
+curl -fsSLO https://raw.githubusercontent.com/AyanamiU/epubcc/main/epubcc.py
+pip install OpenCC                  # 单文件运行需自行安装 OpenCC
+python3 epubcc.py --help
+python3 epubcc.py -t book.epub
+```
+
+或先克隆仓库再运行：
+
+```bash
+git clone https://github.com/AyanamiU/epubcc.git epubcc && cd epubcc
+pip install OpenCC
+python3 epubcc.py -t book.epub
+```
+
+想把它变成全局命令，可自行软链（Linux / macOS）：
+
+```bash
+chmod +x epubcc.py
+ln -sf "$PWD/epubcc.py" ~/.local/bin/epubcc
 epubcc --version
 ```
 
-> macOS 首次运行如提示「无法验证开发者」，执行
-> `xattr -d com.apple.quarantine ./epubcc-macos-arm64` 即可。
+Windows 上可以建一个 `epubcc.bat` 放进 PATH：
 
-### 方式二：pipx（推荐，隔离环境且全局可用）
-
-先安装 [pipx](https://pipx.pypa.io/)：
-
-```bash
-# macOS
-brew install pipx && pipx ensurepath
-# Debian / Ubuntu
-sudo apt install pipx && pipx ensurepath
-# Windows（PowerShell）
-py -m pip install --user pipx
-py -m pipx ensurepath
+```bat
+@echo off
+python "%~dp0epubcc.py" %*
 ```
 
-然后：
+#### 方式二：安装为命令（从源码 / git）
+
+从本地源码安装：
 
 ```bash
-pipx install epubcc                 # 基础版
-pipx install "epubcc[detect]"       # 追加更准的编码探测（chardet）
-pipx install "epubcc[detect,completion]"   # 再加 shell 补全
+cd epubcc                         # 进入已克隆的仓库
+pip install .                       # 或 pipx install .
+pip install ".[detect]"             # 追加 chardet 编码探测
+pip install ".[detect,completion]"  # 再加 shell 补全
 ```
 
-### 方式三：pip / 源码
+不克隆、直接从 git 安装也行（pip / pipx 会在临时目录自动拉取源码）：
 
 ```bash
-pip install epubcc                  # 从 PyPI 安装
-pip install "epubcc[detect]"
-
-# 从源码安装
-git clone <repo_url> epubcc && cd epubcc
-pip install .
+pipx install "git+https://github.com/AyanamiU/epubcc.git"
+pip  install "git+https://github.com/AyanamiU/epubcc.git"
 ```
 
-或者只用单文件脚本（无需安装）：
+> 注意：`epubcc` **没有发布到 PyPI**，因此 `pip install epubcc` /
+> `pipx install epubcc` 不可用，请使用上面的源码 / git 方式。
 
-```bash
-python3 epubcc.py --help
+#### 依赖说明
 
-# 软链到 PATH（Linux / macOS）
-chmod +x epubcc.py
-ln -sf "$PWD/epubcc.py" ~/.local/bin/epubcc
-```
-
-卸载：`pipx uninstall epubcc` 或 `pip uninstall epubcc`，删除软链用
-`rm ~/.local/bin/epubcc`。
-
-### 依赖说明
-
-- `OpenCC`：必需，会随 `epubcc` 自动安装。
+- `OpenCC`：必需。单文件方式需自行 `pip install OpenCC`；
+  用 `pip install .` 安装时会自动装上。
 - `chardet`：可选，装后编码探测更准；未安装时退化为
   「BOM / 声明 / UTF-8 / 探测 / gb18030」的顺序兜底。
 - `argcomplete`：可选，提供 shell 自动补全。
 
-### 开启 shell 补全（可选）
+#### 开启 shell 补全（可选）
+
+先以带 `completion` 的方式安装（`pip install ".[completion]"` 或
+`pipx install ".[completion]"`），然后：
 
 ```bash
-pipx install "epubcc[completion]"
-
 # bash
 eval "$(register-python-argcomplete epubcc)"      # 写入 ~/.bashrc
 # zsh
@@ -116,7 +152,20 @@ eval "$(register-python-argcomplete epubcc)"      # 写入 ~/.zshrc
 register-python-argcomplete --shell powershell epubcc | Out-String | Invoke-Expression
 ```
 
+#### 自己打包成可执行文件（可选）
+
+如果确实想要免 Python 的单文件程序，可以自己用仓库里的 `epubcc.spec` 打包
+（本机需装 PyInstaller）：
+
+```bash
+pip install pyinstaller
+pyinstaller epubcc.spec     # 产物在 dist/
+```
+
 ## 快速开始
+
+> 下面假设你已按上面任一种方式把 `epubcc` 装成了命令。
+> 若直接跑源码，把 `epubcc` 换成 `python3 epubcc.py` 即可。
 
 ```bash
 # 自动判断方向：简体转繁、繁体转简
@@ -250,7 +299,8 @@ book.epub  ->  book_t2s.epub      （自动探测为繁体）
 
 - **Windows 控制台中文乱码或报错？** epubcc 启动时会把标准流切到 UTF-8 并开启
   `errors="replace"`；若仍乱码，可先执行 `chcp 65001` 切换代码页。
-- **提示未找到 OpenCC？** 执行 `pip install OpenCC`（或改用独立可执行文件版本）。
+- **提示未找到 OpenCC？** 执行 `pip install OpenCC`（手动单文件方式需自行安装；
+  用 `install.sh` / `install.bat` 或 `pip install .` 会自动装上）。
 - **原地转换失败或提示文件被占用？** 确认没有其他程序（阅读器、编辑器）打开该书，
   再重试；必要时先用 `-f` 覆盖。
 - **转换后出现错别字？** OpenCC 是字符/短语级转换，遇到一词多字（如「干」「发」）
@@ -268,8 +318,8 @@ python -m build                  # 构建 sdist + wheel
 pyinstaller epubcc.spec          # 打包单文件可执行程序（产物在 dist/）
 ```
 
-CI 会在 Ubuntu / Windows / macOS 上跑测试，见 `.github/workflows/ci.yml`；
-打 tag（`v*`）时由 `release.yml` 自动构建产物并发布到 GitHub Release / PyPI。
+CI 会在 Ubuntu / Windows / macOS 上跑测试并验证构建，见
+`.github/workflows/ci.yml`。本工具不发布到 PyPI，也不提供预编译产物。
 
 ## 已知限制
 

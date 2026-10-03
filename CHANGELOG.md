@@ -6,13 +6,17 @@
 
 ### 新增
 
+- 一键安装脚本：`install.sh`（macOS / Linux）与 `install.bat`（Windows）。
+  先检测 Python（未安装或低于 3.9 则拒绝执行），再建独立虚拟环境把 `epubcc`
+  装成全局命令并写入 PATH，不污染系统 Python。
 - `--color auto|always|never`：彩色输出，默认仅在真实终端上启用，并遵循
   `NO_COLOR` 环境变量。
 - 批量转换时的单行进度提示（TTY 上默认开启，可用 `--no-progress` 关闭）。
 - 可选 shell 补全：安装 `epubcc[completion]` 后支持 bash / zsh / fish / PowerShell
   的 `argcomplete` 补全。
-- PyInstaller 打包配置（`epubcc.spec`）与 GitHub Actions 工作流：跨平台 CI 矩阵、
-  Release 时自动构建 sdist/wheel 及 Windows / Linux / macOS 单文件可执行程序。
+- PyInstaller 打包配置（`epubcc.spec`）与 GitHub Actions CI：跨平台测试矩阵，
+  并在三种系统上验证构建。（本项目不发布到 PyPI，也不提供预编译下载，
+  使用者请从源码获取。）
 
 ### 修复
 
@@ -24,7 +28,7 @@
 
 - 启动时把标准流切到 UTF-8（`errors="replace"`），避免 Windows 控制台/管道
   因代码页导致 `UnicodeEncodeError`；不支持的终端自动把 `✓/✗/·` 降级为 ASCII。
-- PyPI 元数据补全（classifiers、可选依赖、Python 版本范围）。
+- PyPI 元数据补全（classifiers、可选依赖、Python 版本范围），便于本地打包/安装。
 
 ## [1.0.0]
 

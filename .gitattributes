@@ -1,0 +1,8 @@
+# 统一换行符，避免在跨平台协作时把脚本弄坏
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.py   text eol=lf
+*.md   text eol=lf
