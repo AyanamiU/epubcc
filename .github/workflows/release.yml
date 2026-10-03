@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-dist:
+    name: Build sdist + wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+
+  build-binaries:
+    name: Binary (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-x64
+            ext: ""
+          - os: windows-latest
+            name: windows-x64
+            ext: ".exe"
+          - os: macos-latest
+            name: macos-arm64
+            ext: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[detect] pyinstaller
+      - name: Build single-file executable
+        run: pyinstaller epubcc.spec
+      - name: Package artifact
+        shell: bash
+        run: |
+          mkdir -p out
+          cp "dist/epubcc${{ matrix.ext }}" "out/epubcc-${{ matrix.name }}${{ matrix.ext }}"
+          chmod +x "out/epubcc-${{ matrix.name }}${{ matrix.ext }}" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.name }}
+          path: out/*
+
+  github-release:
+    name: Attach artifacts to GitHub Release
+    needs: [build-dist, build-binaries]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+
+  publish-pypi:
+    name: Publish to PyPI (trusted publishing)
+    needs: [build-dist]
+    runs-on: ubuntu-latest
+    # 在 PyPI 上配置好 Trusted Publisher 后即可自动发布；
+    # 未配置时可安全删除本 job 或给它加 if: false
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1

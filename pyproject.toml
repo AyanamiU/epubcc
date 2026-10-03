@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "epubcc"
+description = "EPUB 电子书简繁中文转换命令行工具（基于 OpenCC）"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "epubcc contributors" }]
+keywords = ["epub", "chinese", "opencc", "simplified", "traditional", "ebook", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: Chinese (Simplified)",
+    "Natural Language :: Chinese (Traditional)",
+    "Operating System :: OS Independent",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Utilities",
+]
+dependencies = ["OpenCC>=1.1.3"]
+dynamic = ["version"]
+
+# 发布前请把下面的地址改成你自己的仓库地址
+# [project.urls]
+# Homepage = "https://github.com/OWNER/epubcc"
+# Repository = "https://github.com/OWNER/epubcc"
+# Issues = "https://github.com/OWNER/epubcc/issues"
+# Changelog = "https://github.com/OWNER/epubcc/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+# 更准确的编码探测（找不到时自动退化为 utf-8 / gb18030 兜底）
+detect = ["chardet>=5"]
+# shell 自动补全（bash/zsh/fish/powershell）
+completion = ["argcomplete>=3.0"]
+# 开发用
+dev = ["build>=1.2", "chardet>=5", "argcomplete>=3.0", "pyinstaller>=6.0"]
+
+[project.scripts]
+epubcc = "epubcc:main"
+
+[tool.setuptools]
+py-modules = ["epubcc"]
+
+[tool.setuptools.dynamic]
+version = { attr = "epubcc.__version__" }
